@@ -44,31 +44,13 @@ class _MyAppState extends State<MyApp> {
     if (_firstTime == null) {
       return const MaterialApp(home: Scaffold(body: Center(child: CircularProgressIndicator())));
     }
-    if (_firstTime == true) {
-      return MaterialApp(
-        home: WelcomeScreen(
-          isFirstTime: true,
-          onContinue: _completeWelcome,
-        ),
-      );
-    }
     return MaterialApp(
-      home: WelcomeScreen(
-        isFirstTime: false,
-        onContinue: () {},
-      ),
-      // After a short delay, go to main app
-      builder: (context, child) {
-        Future.delayed(const Duration(seconds: 2), () {
-          if (!mounted) return;
-          if (_firstTime == false) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const MyHomePage()),
-            );
-          }
-        });
-        return child!;
-      },
+      home: _firstTime == true
+          ? WelcomeScreen(
+              isFirstTime: true,
+              onContinue: _completeWelcome,
+            )
+          : const MyHomePage(),
     );
   }
 }
