@@ -1,0 +1,44 @@
+{
+  "stores": ["Store A", "Store B"],
+  "categories": [
+    {
+      "id": "fruits",
+      "name": "Fruits & Vegetables",
+      "products": [
+        {
+          "id": "apple",
+          "name": "Apple",
+          "unit": "kg",
+          "prices": {
+            "Store A": 2.99,
+            "Store B": 3.2
+          }
+        },
+        {
+          "id": "banana",
+          "name": "Banana",
+          "unit": "kg",
+          "prices": {
+            "Store A": 1.99,
+            "Store B": 2.1
+          }
+        }
+      ]
+    },
+    {
+      "id": "dairy",
+      "name": "Dairy",
+      "products": [
+        {
+          "id": "milk",
+          "name": "Milk",
+          "unit": "litre",
+          "prices": {
+            "Store A": 1.5,
+            "Store B": 1.7
+          }
+        }
+      ]
+    }
+  ]
+}
