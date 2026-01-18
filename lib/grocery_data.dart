@@ -5,18 +5,33 @@ import 'package:flutter/services.dart' show rootBundle;
 class GroceryData {
   final List<String> stores;
   final List<GroceryCategory> categories;
+  final List<GroceryProduct> products;
+  final String lastUpdated;
 
-  GroceryData({required this.stores, required this.categories});
+  GroceryData({
+    required this.stores,
+    required this.categories,
+    required this.products,
+    required this.lastUpdated,
+  });
 
   factory GroceryData.fromJson(Map<String, dynamic> json) {
-    final storesJson = json['stores'] as List<dynamic>? ?? <dynamic>[];
+    final metaJson = json['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
     final categoriesJson = json['categories'] as List<dynamic>? ?? <dynamic>[];
+    final productsJson = json['products'] as List<dynamic>? ?? <dynamic>[];
+
+    final storesJson = metaJson['stores'] as List<dynamic>? ?? <dynamic>[];
+    final String lastUpdated = metaJson['last_updated']?.toString() ?? '';
 
     return GroceryData(
       stores: storesJson.map((e) => e.toString()).toList(),
       categories: categoriesJson
           .map((e) => GroceryCategory.fromJson(e as Map<String, dynamic>))
           .toList(),
+      products: productsJson
+          .map((e) => GroceryProduct.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      lastUpdated: lastUpdated,
     );
   }
 }
@@ -24,22 +39,19 @@ class GroceryData {
 class GroceryCategory {
   final String id;
   final String name;
-  final List<GroceryProduct> products;
+  final String icon;
 
   GroceryCategory({
     required this.id,
     required this.name,
-    required this.products,
+    required this.icon,
   });
 
   factory GroceryCategory.fromJson(Map<String, dynamic> json) {
-    final productsJson = json['products'] as List<dynamic>? ?? <dynamic>[];
     return GroceryCategory(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      products: productsJson
-          .map((e) => GroceryProduct.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      icon: json['icon']?.toString() ?? '',
     );
   }
 }
@@ -47,13 +59,21 @@ class GroceryCategory {
 class GroceryProduct {
   final String id;
   final String name;
+  final String brand;
+  final String categoryId;
   final String unit;
+  final bool essential;
+  final List<String> searchTags;
   final Map<String, double> pricesByStore;
 
   GroceryProduct({
     required this.id,
     required this.name,
+    required this.brand,
+    required this.categoryId,
     required this.unit,
+    required this.essential,
+    required this.searchTags,
     required this.pricesByStore,
   });
 
@@ -67,10 +87,16 @@ class GroceryProduct {
       }
     });
 
+    final tagsJson = json['search_tags'] as List<dynamic>? ?? <dynamic>[];
+
     return GroceryProduct(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
+      brand: json['brand']?.toString() ?? '',
+      categoryId: json['category_id']?.toString() ?? '',
       unit: json['unit']?.toString() ?? '',
+      essential: (json['essential'] as bool?) ?? false,
+      searchTags: tagsJson.map((e) => e.toString()).toList(),
       pricesByStore: prices,
     );
   }

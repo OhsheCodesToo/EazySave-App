@@ -1,44 +1,692 @@
 {
-  "stores": ["Store A", "Store B"],
+  "meta": {
+    "currency": "ZAR",
+    "stores": ["Shoprite", "Pick n Pay"],
+    "last_updated": "2026-01-15",
+    "version": "1.0"
+  },
   "categories": [
-    {
-      "id": "fruits",
-      "name": "Fruits & Vegetables",
-      "products": [
-        {
-          "id": "apple",
-          "name": "Apple",
-          "unit": "kg",
-          "prices": {
-            "Store A": 2.99,
-            "Store B": 3.2
-          }
-        },
-        {
-          "id": "banana",
-          "name": "Banana",
-          "unit": "kg",
-          "prices": {
-            "Store A": 1.99,
-            "Store B": 2.1
-          }
-        }
-      ]
-    },
     {
       "id": "dairy",
       "name": "Dairy",
-      "products": [
-        {
-          "id": "milk",
-          "name": "Milk",
-          "unit": "litre",
-          "prices": {
-            "Store A": 1.5,
-            "Store B": 1.7
-          }
-        }
-      ]
+      "icon": "milk"
+    },
+    {
+      "id": "bakery_grains",
+      "name": "Bakery & Grains",
+      "icon": "bread"
+    },
+    {
+      "id": "protein",
+      "name": "Protein",
+      "icon": "meat"
+    },
+    {
+      "id": "fresh_produce",
+      "name": "Fresh Produce",
+      "icon": "vegetables"
+    },
+    {
+      "id": "pantry",
+      "name": "Pantry Essentials",
+      "icon": "pantry"
+    },
+    {
+      "id": "household",
+      "name": "Household",
+      "icon": "cleaning"
+    }
+  ],
+  "products": [
+    {
+      "id": "milk_fullcream_2l",
+      "name": "Full Cream Milk",
+      "brand": "Clover",
+      "category_id": "dairy",
+      "unit": "2L",
+      "essential": true,
+      "search_tags": ["milk", "full cream", "fresh milk", "clover", "dairy", "2l"],
+      "prices": {
+        "Shoprite": 34.99,
+        "Pick n Pay": 36.99
+      }
+    },
+    {
+      "id": "milk_lowfat_2l",
+      "name": "Low Fat Milk",
+      "brand": "Clover",
+      "category_id": "dairy",
+      "unit": "2L",
+      "essential": false,
+      "search_tags": ["milk", "low fat", "skim", "clover", "dairy", "2l"],
+      "prices": {
+        "Shoprite": 33.99,
+        "Pick n Pay": 35.99
+      }
+    },
+    {
+      "id": "eggs_18_pack",
+      "name": "Eggs 18 Pack",
+      "brand": "Farm Fresh",
+      "category_id": "dairy",
+      "unit": "18 pack",
+      "essential": true,
+      "search_tags": ["eggs", "18 pack", "large eggs", "farm fresh", "protein"],
+      "prices": {
+        "Shoprite": 64.99,
+        "Pick n Pay": 69.99
+      }
+    },
+    {
+      "id": "margarine_500g",
+      "name": "Margarine",
+      "brand": "Rama",
+      "category_id": "dairy",
+      "unit": "500g",
+      "essential": true,
+      "search_tags": ["margarine", "spread", "rama", "butter alternative", "500g"],
+      "prices": {
+        "Shoprite": 29.99,
+        "Pick n Pay": 32.99
+      }
+    },
+    {
+      "id": "cheddar_cheese_400g",
+      "name": "Cheddar Cheese",
+      "brand": "Clover",
+      "category_id": "dairy",
+      "unit": "400g",
+      "essential": false,
+      "search_tags": ["cheese", "cheddar", "clover", "dairy", "400g"],
+      "prices": {
+        "Shoprite": 74.99,
+        "Pick n Pay": 79.99
+      }
+    },
+    {
+      "id": "plain_yoghurt_1kg",
+      "name": "Plain Yoghurt",
+      "brand": "Parmalat",
+      "category_id": "dairy",
+      "unit": "1kg",
+      "essential": false,
+      "search_tags": ["yoghurt", "plain", "parmalat", "dairy", "1kg"],
+      "prices": {
+        "Shoprite": 39.99,
+        "Pick n Pay": 44.99
+      }
+    },
+    {
+      "id": "milk_longlife_1l",
+      "name": "Long Life Milk",
+      "brand": "First Choice",
+      "category_id": "dairy",
+      "unit": "1L",
+      "essential": false,
+      "search_tags": ["milk", "long life", "uht", "first choice", "dairy", "1l"],
+      "prices": {
+        "Shoprite": 18.99,
+        "Pick n Pay": 19.99
+      }
+    },
+    {
+      "id": "butter_500g",
+      "name": "Salted Butter",
+      "brand": "Lurpak",
+      "category_id": "dairy",
+      "unit": "500g",
+      "essential": false,
+      "search_tags": ["butter", "salted butter", "baking", "lurpak", "500g"],
+      "prices": {
+        "Shoprite": 94.99,
+        "Pick n Pay": 99.99
+      }
+    },
+    {
+      "id": "bread_white_700g",
+      "name": "White Bread",
+      "brand": "Albany",
+      "category_id": "bakery_grains",
+      "unit": "700g",
+      "essential": true,
+      "search_tags": ["bread", "white bread", "albany", "loaf", "700g"],
+      "prices": {
+        "Shoprite": 17.99,
+        "Pick n Pay": 18.99
+      }
+    },
+    {
+      "id": "bread_brown_700g",
+      "name": "Brown Bread",
+      "brand": "Albany",
+      "category_id": "bakery_grains",
+      "unit": "700g",
+      "essential": false,
+      "search_tags": ["bread", "brown bread", "albany", "health", "700g"],
+      "prices": {
+        "Shoprite": 16.99,
+        "Pick n Pay": 17.99
+      }
+    },
+    {
+      "id": "maize_meal_5kg",
+      "name": "Maize Meal",
+      "brand": "Iwisa",
+      "category_id": "bakery_grains",
+      "unit": "5kg",
+      "essential": true,
+      "search_tags": ["maize meal", "mealie meal", "pap", "iwisa", "staple", "5kg"],
+      "prices": {
+        "Shoprite": 89.99,
+        "Pick n Pay": 94.99
+      }
+    },
+    {
+      "id": "rice_5kg",
+      "name": "Long Grain Rice",
+      "brand": "Tastic",
+      "category_id": "bakery_grains",
+      "unit": "5kg",
+      "essential": true,
+      "search_tags": ["rice", "tastic", "long grain", "5kg", "staple"],
+      "prices": {
+        "Shoprite": 129.99,
+        "Pick n Pay": 139.99
+      }
+    },
+    {
+      "id": "samp_beans_2kg",
+      "name": "Samp & Beans",
+      "brand": "Ace",
+      "category_id": "bakery_grains",
+      "unit": "2kg",
+      "essential": false,
+      "search_tags": ["samp", "beans", "ace", "stew", "2kg"],
+      "prices": {
+        "Shoprite": 49.99,
+        "Pick n Pay": 54.99
+      }
+    },
+    {
+      "id": "cake_flour_2_5kg",
+      "name": "Cake Wheat Flour",
+      "brand": "Snowflake",
+      "category_id": "bakery_grains",
+      "unit": "2.5kg",
+      "essential": false,
+      "search_tags": ["flour", "cake flour", "baking", "snowflake", "2.5kg"],
+      "prices": {
+        "Shoprite": 64.99,
+        "Pick n Pay": 69.99
+      }
+    },
+    {
+      "id": "oats_1kg",
+      "name": "Rolled Oats",
+      "brand": "Jungle Oats",
+      "category_id": "bakery_grains",
+      "unit": "1kg",
+      "essential": false,
+      "search_tags": ["oats", "porridge", "jungle oats", "breakfast", "1kg"],
+      "prices": {
+        "Shoprite": 39.99,
+        "Pick n Pay": 42.99
+      }
+    },
+    {
+      "id": "spaghetti_500g",
+      "name": "Spaghetti",
+      "brand": "Fatti's & Moni's",
+      "category_id": "bakery_grains",
+      "unit": "500g",
+      "essential": false,
+      "search_tags": ["pasta", "spaghetti", "fatti's", "moni's", "500g"],
+      "prices": {
+        "Shoprite": 19.99,
+        "Pick n Pay": 21.99
+      }
+    },
+    {
+      "id": "chicken_portions_2kg",
+      "name": "Chicken Portions",
+      "brand": "Farmer's Choice",
+      "category_id": "protein",
+      "unit": "2kg",
+      "essential": true,
+      "search_tags": ["chicken", "portions", "frozen chicken", "2kg"],
+      "prices": {
+        "Shoprite": 89.99,
+        "Pick n Pay": 99.99
+      }
+    },
+    {
+      "id": "beef_mince_1kg",
+      "name": "Beef Mince",
+      "brand": "Butchery Select",
+      "category_id": "protein",
+      "unit": "1kg",
+      "essential": true,
+      "search_tags": ["beef", "mince", "ground beef", "1kg", "protein"],
+      "prices": {
+        "Shoprite": 99.99,
+        "Pick n Pay": 109.99
+      }
+    },
+    {
+      "id": "boerewors_1kg",
+      "name": "Boerewors",
+      "brand": "Traditional",
+      "category_id": "protein",
+      "unit": "1kg",
+      "essential": false,
+      "search_tags": ["boerewors", "wors", "sausage", "braai", "1kg"],
+      "prices": {
+        "Shoprite": 109.99,
+        "Pick n Pay": 119.99
+      }
+    },
+    {
+      "id": "chicken_breast_frozen_1kg",
+      "name": "Frozen Chicken Breast",
+      "brand": "Farmer's Choice",
+      "category_id": "protein",
+      "unit": "1kg",
+      "essential": false,
+      "search_tags": ["chicken", "breast", "frozen", "1kg"],
+      "prices": {
+        "Shoprite": 84.99,
+        "Pick n Pay": 89.99
+      }
+    },
+    {
+      "id": "pilchards_canned_400g",
+      "name": "Canned Pilchards in Tomato Sauce",
+      "brand": "Lucky Star",
+      "category_id": "protein",
+      "unit": "400g",
+      "essential": false,
+      "search_tags": ["pilchards", "canned fish", "lucky star", "400g"],
+      "prices": {
+        "Shoprite": 27.99,
+        "Pick n Pay": 29.99
+      }
+    },
+    {
+      "id": "tuna_canned_170g",
+      "name": "Canned Tuna",
+      "brand": "Sea Harvest",
+      "category_id": "protein",
+      "unit": "170g",
+      "essential": false,
+      "search_tags": ["tuna", "canned fish", "sea harvest", "170g"],
+      "prices": {
+        "Shoprite": 22.99,
+        "Pick n Pay": 24.99
+      }
+    },
+    {
+      "id": "eggs_30_pack",
+      "name": "Eggs 30 Pack",
+      "brand": "Farm Fresh",
+      "category_id": "protein",
+      "unit": "30 pack",
+      "essential": false,
+      "search_tags": ["eggs", "30 pack", "tray", "farm fresh", "protein"],
+      "prices": {
+        "Shoprite": 99.99,
+        "Pick n Pay": 109.99
+      }
+    },
+    {
+      "id": "polony_500g",
+      "name": "Polony",
+      "brand": "Enterprise",
+      "category_id": "protein",
+      "unit": "500g",
+      "essential": false,
+      "search_tags": ["polony", "cold meat", "enterprise", "sandwich", "500g"],
+      "prices": {
+        "Shoprite": 24.99,
+        "Pick n Pay": 26.99
+      }
+    },
+    {
+      "id": "potatoes_7kg",
+      "name": "Potatoes",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "7kg",
+      "essential": true,
+      "search_tags": ["potatoes", "fresh produce", "7kg", "veg"],
+      "prices": {
+        "Shoprite": 79.99,
+        "Pick n Pay": 84.99
+      }
+    },
+    {
+      "id": "onions_2kg",
+      "name": "Onions",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "2kg",
+      "essential": true,
+      "search_tags": ["onions", "fresh produce", "2kg", "veg"],
+      "prices": {
+        "Shoprite": 29.99,
+        "Pick n Pay": 32.99
+      }
+    },
+    {
+      "id": "tomatoes_1kg",
+      "name": "Tomatoes",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "1kg",
+      "essential": true,
+      "search_tags": ["tomatoes", "fresh produce", "1kg", "veg"],
+      "prices": {
+        "Shoprite": 24.99,
+        "Pick n Pay": 27.99
+      }
+    },
+    {
+      "id": "carrots_2kg",
+      "name": "Carrots",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "2kg",
+      "essential": false,
+      "search_tags": ["carrots", "fresh produce", "2kg", "veg"],
+      "prices": {
+        "Shoprite": 22.99,
+        "Pick n Pay": 24.99
+      }
+    },
+    {
+      "id": "cabbage_head",
+      "name": "Cabbage",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "each",
+      "essential": false,
+      "search_tags": ["cabbage", "fresh produce", "whole", "veg"],
+      "prices": {
+        "Shoprite": 19.99,
+        "Pick n Pay": 21.99
+      }
+    },
+    {
+      "id": "apples_1_5kg",
+      "name": "Apples",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "1.5kg",
+      "essential": false,
+      "search_tags": ["apples", "fruit", "1.5kg", "fresh produce"],
+      "prices": {
+        "Shoprite": 34.99,
+        "Pick n Pay": 36.99
+      }
+    },
+    {
+      "id": "bananas_1kg",
+      "name": "Bananas",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "1kg",
+      "essential": false,
+      "search_tags": ["bananas", "fruit", "1kg", "fresh produce"],
+      "prices": {
+        "Shoprite": 22.99,
+        "Pick n Pay": 24.99
+      }
+    },
+    {
+      "id": "oranges_2kg",
+      "name": "Oranges",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "2kg",
+      "essential": false,
+      "search_tags": ["oranges", "citrus", "fruit", "2kg", "fresh produce"],
+      "prices": {
+        "Shoprite": 39.99,
+        "Pick n Pay": 42.99
+      }
+    },
+    {
+      "id": "spinach_bunch",
+      "name": "Spinach Bunch",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "bunch",
+      "essential": false,
+      "search_tags": ["spinach", "greens", "bunch", "fresh produce"],
+      "prices": {
+        "Shoprite": 14.99,
+        "Pick n Pay": 16.99
+      }
+    },
+    {
+      "id": "butternut",
+      "name": "Butternut",
+      "brand": "Fresh Produce",
+      "category_id": "fresh_produce",
+      "unit": "each",
+      "essential": false,
+      "search_tags": ["butternut", "squash", "veg", "fresh produce"],
+      "prices": {
+        "Shoprite": 24.99,
+        "Pick n Pay": 26.99
+      }
+    },
+    {
+      "id": "cooking_oil_2l",
+      "name": "Sunflower Cooking Oil",
+      "brand": "Sunfoil",
+      "category_id": "pantry",
+      "unit": "2L",
+      "essential": true,
+      "search_tags": ["cooking oil", "sunflower oil", "sunfoil", "2l", "pantry"],
+      "prices": {
+        "Shoprite": 89.99,
+        "Pick n Pay": 94.99
+      }
+    },
+    {
+      "id": "white_sugar_2_5kg",
+      "name": "White Sugar",
+      "brand": "Huletts",
+      "category_id": "pantry",
+      "unit": "2.5kg",
+      "essential": true,
+      "search_tags": ["sugar", "white sugar", "huletts", "2.5kg", "pantry"],
+      "prices": {
+        "Shoprite": 59.99,
+        "Pick n Pay": 64.99
+      }
+    },
+    {
+      "id": "salt_1kg",
+      "name": "Iodated Salt",
+      "brand": "Saxa",
+      "category_id": "pantry",
+      "unit": "1kg",
+      "essential": false,
+      "search_tags": ["salt", "iodated", "saxa", "1kg", "pantry"],
+      "prices": {
+        "Shoprite": 14.99,
+        "Pick n Pay": 15.99
+      }
+    },
+    {
+      "id": "black_tea_100_bags",
+      "name": "Black Tea 100 Bags",
+      "brand": "Five Roses",
+      "category_id": "pantry",
+      "unit": "100 bags",
+      "essential": true,
+      "search_tags": ["tea", "black tea", "five roses", "100 bags", "pantry"],
+      "prices": {
+        "Shoprite": 34.99,
+        "Pick n Pay": 39.99
+      }
+    },
+    {
+      "id": "coffee_200g",
+      "name": "Instant Coffee",
+      "brand": "Nescafé",
+      "category_id": "pantry",
+      "unit": "200g",
+      "essential": false,
+      "search_tags": ["coffee", "instant coffee", "nescafe", "200g", "pantry"],
+      "prices": {
+        "Shoprite": 69.99,
+        "Pick n Pay": 74.99
+      }
+    },
+    {
+      "id": "tomato_sauce_700ml",
+      "name": "Tomato Sauce",
+      "brand": "All Gold",
+      "category_id": "pantry",
+      "unit": "700ml",
+      "essential": false,
+      "search_tags": ["tomato sauce", "ketchup", "all gold", "700ml", "pantry"],
+      "prices": {
+        "Shoprite": 28.99,
+        "Pick n Pay": 31.99
+      }
+    },
+    {
+      "id": "mayonnaise_750g",
+      "name": "Mayonnaise",
+      "brand": "Crosse & Blackwell",
+      "category_id": "pantry",
+      "unit": "750g",
+      "essential": false,
+      "search_tags": ["mayonnaise", "crosse & blackwell", "condiment", "750g"],
+      "prices": {
+        "Shoprite": 49.99,
+        "Pick n Pay": 54.99
+      }
+    },
+    {
+      "id": "peanut_butter_400g",
+      "name": "Peanut Butter",
+      "brand": "Black Cat",
+      "category_id": "pantry",
+      "unit": "400g",
+      "essential": false,
+      "search_tags": ["peanut butter", "black cat", "spread", "400g", "pantry"],
+      "prices": {
+        "Shoprite": 39.99,
+        "Pick n Pay": 42.99
+      }
+    },
+    {
+      "id": "toilet_paper_18_pack",
+      "name": "Toilet Paper 18 Pack",
+      "brand": "Baby Soft",
+      "category_id": "household",
+      "unit": "18 rolls",
+      "essential": true,
+      "search_tags": ["toilet paper", "18 pack", "baby soft", "household"],
+      "prices": {
+        "Shoprite": 109.99,
+        "Pick n Pay": 119.99
+      }
+    },
+    {
+      "id": "washing_powder_2kg",
+      "name": "Washing Powder",
+      "brand": "Omo",
+      "category_id": "household",
+      "unit": "2kg",
+      "essential": true,
+      "search_tags": ["washing powder", "laundry", "omo", "2kg", "household"],
+      "prices": {
+        "Shoprite": 79.99,
+        "Pick n Pay": 89.99
+      }
+    },
+    {
+      "id": "dishwashing_liquid_750ml",
+      "name": "Dishwashing Liquid",
+      "brand": "Sunlight",
+      "category_id": "household",
+      "unit": "750ml",
+      "essential": false,
+      "search_tags": ["dishwashing liquid", "sunlight", "750ml", "household"],
+      "prices": {
+        "Shoprite": 24.99,
+        "Pick n Pay": 26.99
+      }
+    },
+    {
+      "id": "all_purpose_cleaner_750ml",
+      "name": "All-Purpose Cleaner",
+      "brand": "Mr. Muscle",
+      "category_id": "household",
+      "unit": "750ml",
+      "essential": false,
+      "search_tags": ["cleaner", "all-purpose", "mr muscle", "750ml", "household"],
+      "prices": {
+        "Shoprite": 32.99,
+        "Pick n Pay": 34.99
+      }
+    },
+    {
+      "id": "hand_soap_500ml",
+      "name": "Liquid Hand Soap",
+      "brand": "Lifebuoy",
+      "category_id": "household",
+      "unit": "500ml",
+      "essential": false,
+      "search_tags": ["hand soap", "liquid soap", "lifebuoy", "500ml", "household"],
+      "prices": {
+        "Shoprite": 19.99,
+        "Pick n Pay": 21.99
+      }
+    },
+    {
+      "id": "bleach_2l",
+      "name": "Bleach",
+      "brand": "Jik",
+      "category_id": "household",
+      "unit": "2L",
+      "essential": false,
+      "search_tags": ["bleach", "jik", "cleaning", "2l", "household"],
+      "prices": {
+        "Shoprite": 24.99,
+        "Pick n Pay": 26.99
+      }
+    },
+    {
+      "id": "tissues_box",
+      "name": "Facial Tissues Box",
+      "brand": "Kleenex",
+      "category_id": "household",
+      "unit": "box",
+      "essential": false,
+      "search_tags": ["tissues", "facial tissues", "box", "kleenex", "household"],
+      "prices": {
+        "Shoprite": 17.99,
+        "Pick n Pay": 19.99
+      }
+    },
+    {
+      "id": "refuse_bags_roll",
+      "name": "Refuse Bags Roll",
+      "brand": "Tuffy",
+      "category_id": "household",
+      "unit": "roll",
+      "essential": false,
+      "search_tags": ["refuse bags", "bin bags", "tuffy", "roll", "household"],
+      "prices": {
+        "Shoprite": 34.99,
+        "Pick n Pay": 37.99
+      }
     }
   ]
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'compare_stores_page.dart';
 import 'grocery_data.dart';
 
 class CreateListPage extends StatefulWidget {
@@ -14,12 +15,15 @@ class CreateListPage extends StatefulWidget {
 
 class _CreateListPageState extends State<CreateListPage> {
   bool _isLoading = true;
-  List<GroceryCategory> _categories = <GroceryCategory>[];
-  GroceryCategory? _selectedCategory;
+
+  final List<GroceryProduct> _allProducts = <GroceryProduct>[];
 
   final Map<String, ShoppingListItem> _shoppingList = <String, ShoppingListItem>{};
 
   static const String _prefsKey = 'shopping_list';
+
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -27,13 +31,21 @@ class _CreateListPageState extends State<CreateListPage> {
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     final data = await GroceryDataLoader.load();
     await _loadShoppingListFromPrefs(data);
+    final List<GroceryProduct> allProducts = List<GroceryProduct>.from(data.products);
     if (!mounted) return;
     setState(() {
-      _categories = data.categories;
-      _selectedCategory = _categories.isNotEmpty ? _categories.first : null;
+      _allProducts
+        ..clear()
+        ..addAll(allProducts);
       _isLoading = false;
     });
   }
@@ -41,7 +53,17 @@ class _CreateListPageState extends State<CreateListPage> {
   Future<void> _loadShoppingListFromPrefs(GroceryData data) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_prefsKey);
-    if (raw == null || raw.isEmpty) return;
+    if (raw == null || raw.isEmpty) {
+      for (final product in data.products) {
+        if (product.essential) {
+          _shoppingList[product.id] = ShoppingListItem(
+            product: product,
+            quantity: 1,
+          );
+        }
+      }
+      return;
+    }
 
     final Map<String, dynamic> decoded = jsonDecode(raw) as Map<String, dynamic>;
     decoded.forEach((productId, quantityValue) {
@@ -73,20 +95,12 @@ class _CreateListPageState extends State<CreateListPage> {
   }
 
   GroceryProduct? _findProductById(GroceryData data, String id) {
-    for (final category in data.categories) {
-      for (final product in category.products) {
-        if (product.id == id) {
-          return product;
-        }
+    for (final product in data.products) {
+      if (product.id == id) {
+        return product;
       }
     }
     return null;
-  }
-
-  void _selectCategory(GroceryCategory category) {
-    setState(() {
-      _selectedCategory = category;
-    });
   }
 
   Future<void> _addProduct(GroceryProduct product) async {
@@ -97,6 +111,13 @@ class _CreateListPageState extends State<CreateListPage> {
       } else {
         _shoppingList[product.id] = ShoppingListItem(product: product, quantity: 1);
       }
+    });
+    await _saveShoppingListToPrefs();
+  }
+
+  Future<void> _deleteProduct(GroceryProduct product) async {
+    setState(() {
+      _shoppingList.remove(product.id);
     });
     await _saveShoppingListToPrefs();
   }
@@ -116,12 +137,6 @@ class _CreateListPageState extends State<CreateListPage> {
     await _saveShoppingListToPrefs();
   }
 
-  int _quantityForProduct(GroceryProduct product) {
-    return _shoppingList[product.id]?.quantity ?? 0;
-  }
-
-  int get _totalItems => _shoppingList.values.fold<int>(0, (sum, item) => sum + item.quantity);
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -130,54 +145,143 @@ class _CreateListPageState extends State<CreateListPage> {
 
     return Column(
       children: <Widget>[
-        _buildCategorySelector(),
-        const Divider(height: 1),
-        Expanded(child: _buildProductList()),
-        _buildShoppingListSummary(),
+        Expanded(
+          child: _buildProductList(),
+        ),
+        _buildProductSearchBar(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _onCompareStoresPressed,
+              child: const Text('Compare stores'),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildCategorySelector() {
-    if (_categories.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('No categories available'),
-      );
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchQuery = value;
+    });
+  }
+
+  Future<void> _onSuggestionSelected(GroceryProduct product) async {
+    await _addProduct(product);
+    if (!mounted) return;
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+    });
+  }
+
+  List<GroceryProduct> _searchResults() {
+    final String query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) {
+      return <GroceryProduct>[];
     }
 
-    return SizedBox(
-      height: 56,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (BuildContext context, int index) {
-          final category = _categories[index];
-          final bool isSelected = category == _selectedCategory;
-          return ChoiceChip(
-            label: Text(category.name),
-            selected: isSelected,
-            onSelected: (_) => _selectCategory(category),
-          );
-        },
+    return _allProducts
+        .where((product) => product.name.toLowerCase().contains(query))
+        .toList();
+  }
+
+  Future<void> _onCompareStoresPressed() async {
+    await _saveShoppingListToPrefs();
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => const CompareStoresPage(),
       ),
     );
   }
 
+  Widget _buildProductSearchBar() {
+    final results = _searchResults();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Search products',
+                      icon: Icon(Icons.search),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (results.isNotEmpty)
+          Container(
+            constraints: const BoxConstraints(maxHeight: 200),
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: results.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (BuildContext context, int index) {
+                final product = results[index];
+                final cheapest = product.cheapestPrice;
+                return ListTile(
+                  title: Text(product.name),
+                  subtitle: cheapest != null
+                      ? Text(
+                          'From ${cheapest.toStringAsFixed(2)} per ${product.unit}',
+                        )
+                      : Text(product.unit),
+                  onTap: () => _onSuggestionSelected(product),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+ 
   Widget _buildProductList() {
-    final category = _selectedCategory;
-    if (category == null || category.products.isEmpty) {
-      return const Center(child: Text('No products available'));
+    final List<ShoppingListItem> items = _shoppingList.values.toList();
+
+    if (items.isEmpty) {
+      return const Center(child: Text('No products in this list'));
     }
 
     return ListView.separated(
-      itemCount: category.products.length,
+      itemCount: items.length,
       separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (BuildContext context, int index) {
-        final product = category.products[index];
-        final quantity = _quantityForProduct(product);
+        final item = items[index];
+        final product = item.product;
+        final quantity = item.quantity;
         final cheapest = product.cheapestPrice;
 
         return ListTile(
@@ -197,50 +301,14 @@ class _CreateListPageState extends State<CreateListPage> {
                 icon: const Icon(Icons.add_circle_outline),
                 onPressed: () => _addProduct(product),
               ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => _deleteProduct(product),
+              ),
             ],
           ),
         );
       },
-    );
-  }
-
-  Widget _buildShoppingListSummary() {
-    if (_shoppingList.isEmpty) {
-      return Container(
-        width: double.infinity,
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        padding: const EdgeInsets.all(12),
-        child: const Text('Shopping list is empty'),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text('Shopping list ($_totalItems items)'),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 80,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _shoppingList.values.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (BuildContext context, int index) {
-                final item = _shoppingList.values.elementAt(index);
-                return Chip(
-                  label: Text('${item.product.name} x${item.quantity}'),
-                  onDeleted: () => _removeProduct(item.product),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -17,41 +17,59 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool? _firstTime;
+  bool? _hasCompletedInitialList;
 
   @override
   void initState() {
     super.initState();
-    _checkFirstTime();
+    _loadStartupFlags();
   }
 
-  Future<void> _checkFirstTime() async {
+  Future<void> _loadStartupFlags() async {
     final prefs = await SharedPreferences.getInstance();
-    final first = prefs.getBool('first_time') ?? true;
+    final bool first = prefs.getBool('first_time') ?? true;
+    final bool completed = prefs.getBool('has_completed_initial_list') ?? false;
     setState(() {
       _firstTime = first;
+      _hasCompletedInitialList = completed;
     });
   }
 
-  void _completeWelcome() async {
+  Future<void> _completeWelcome() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('first_time', false);
+    await prefs.setBool('has_completed_initial_list', false);
     setState(() {
       _firstTime = false;
+      _hasCompletedInitialList = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_firstTime == null) {
-      return const MaterialApp(home: Scaffold(body: Center(child: CircularProgressIndicator())));
+    if (_firstTime == null || _hasCompletedInitialList == null) {
+      return const MaterialApp(
+        home: Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      );
     }
-    return MaterialApp(
-      home: _firstTime == true
-          ? WelcomeScreen(
-              isFirstTime: true,
-              onContinue: _completeWelcome,
-            )
-          : const NavBar(),
-    );
+
+    final Widget home;
+    if (_firstTime == true) {
+      home = WelcomeScreen(
+        isFirstTime: true,
+        onContinue: _completeWelcome,
+      );
+    } else if (_hasCompletedInitialList == false) {
+      // User has completed welcome but not their first full list yet:
+      // start them on the Create List tab.
+      home = const NavBar(initialIndex: 1);
+    } else {
+      // Normal flow: start on Home tab.
+      home = const NavBar();
+    }
+
+    return MaterialApp(home: home);
   }
 }
