@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'create_list_page.dart';
 import 'home_page.dart';
+import 'my_lists_page.dart';
 
 class NavBar extends StatefulWidget {
   const NavBar({super.key, this.initialIndex = 0});
@@ -34,7 +35,7 @@ class _NavBarState extends State<NavBar> {
       ),
       const CreateListPage(),
       const Center(child: Text('Messages', style: TextStyle(fontSize: 24))),
-      const Center(child: Text('My lists', style: TextStyle(fontSize: 24))),
+      const MyListsPage(),
     ];
 
     return Scaffold(

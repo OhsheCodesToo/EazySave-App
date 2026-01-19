@@ -239,7 +239,72 @@ class _StoreCard extends StatelessWidget {
   }
 
   Future<void> _onSavePressed(BuildContext context) async {
+    final TextEditingController controller = TextEditingController(
+      text: '${result.storeName} list',
+    );
+
+    final String? name = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Save list'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'List name',
+            ),
+            autofocus: true,
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(dialogContext).pop(controller.text.trim()),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (name == null || name.isEmpty) {
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
+    final String? existing = prefs.getString('saved_lists');
+    List<dynamic> saved = <dynamic>[];
+    if (existing != null && existing.isNotEmpty) {
+      final dynamic decoded = jsonDecode(existing);
+      if (decoded is List<dynamic>) {
+        saved = decoded;
+      }
+    }
+
+    final Map<String, int> itemQuantities = <String, int>{};
+    for (final _StoreLineItem item in result.items) {
+      itemQuantities[item.product.id] = item.quantity;
+    }
+
+    final DateTime now = DateTime.now();
+    final Map<String, dynamic> entry = <String, dynamic>{
+      'id': now.millisecondsSinceEpoch.toString(),
+      'name': name,
+      'storeName': result.storeName,
+      'total': result.total,
+      'createdAt': now.toIso8601String(),
+      'items': itemQuantities,
+    };
+
+    saved.add(entry);
+    await prefs.setString('saved_lists', jsonEncode(saved));
+
+    // Remember this as the current list name for the Home page.
+    await prefs.setString('current_list_name', name);
+
     await prefs.setBool('has_completed_initial_list', true);
 
     // Navigate to Home tab and clear the stack so Home becomes the new root.

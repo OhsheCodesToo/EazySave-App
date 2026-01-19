@@ -36,6 +36,7 @@ class _HomePageState extends State<HomePage> {
     final data = await GroceryDataLoader.load();
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_prefsKey);
+    final String listName = prefs.getString('current_list_name') ?? '';
 
     final Map<String, int> quantities = <String, int>{};
 
@@ -103,6 +104,7 @@ class _HomePageState extends State<HomePage> {
         data: data,
         stores: stores,
         cheapestIndex: 0,
+        listName: listName,
       );
     }
 
@@ -113,6 +115,7 @@ class _HomePageState extends State<HomePage> {
       data: data,
       stores: stores,
       cheapestIndex: cheapestIndex,
+      listName: listName,
     );
   }
 
@@ -220,7 +223,9 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              'Till slip - ${selectedStore.storeName}',
+                              homeData.listName.isNotEmpty
+                                  ? homeData.listName
+                                  : 'Till slip - ${selectedStore.storeName}',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ],
@@ -284,11 +289,13 @@ class _HomeData {
     required this.data,
     required this.stores,
     required this.cheapestIndex,
+    required this.listName,
   });
 
   final GroceryData data;
   final List<_StoreView> stores;
   final int cheapestIndex;
+  final String listName;
 }
 
 class _StoreView {

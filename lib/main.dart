@@ -48,8 +48,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     if (_firstTime == null || _hasCompletedInitialList == null) {
-      return const MaterialApp(
-        home: Scaffold(
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         ),
       );
@@ -70,6 +71,9 @@ class _MyAppState extends State<MyApp> {
       home = const NavBar();
     }
 
-    return MaterialApp(home: home);
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: home,
+    );
   }
 }
