@@ -37,6 +37,15 @@ dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.3.0
   share_plus: ^10.0.0
+  
+  # Notifications and Supabase
+  supabase_flutter: ^2.3.2
+  flutter_local_notifications: ^19.5.0
+  permission_handler: ^11.3.0
+  timezone: ^0.10.1
+  timeago: ^3.7.1
+  http: ^1.2.0
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +70,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/grocery_data.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
