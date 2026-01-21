@@ -282,6 +282,7 @@ class _CreateListPageState extends State<CreateListPage> {
         final item = items[index];
         final product = item.product;
         final quantity = item.quantity;
+        final String quantityLabel = quantity.toString();
         final cheapest = product.cheapestPrice;
 
         return ListTile(
@@ -296,7 +297,7 @@ class _CreateListPageState extends State<CreateListPage> {
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: quantity > 0 ? () => _removeProduct(product) : null,
               ),
-              Text(quantity.toString()),
+              Text(quantityLabel),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline),
                 onPressed: () => _addProduct(product),

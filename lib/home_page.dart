@@ -247,12 +247,15 @@ class _HomePageState extends State<HomePage> {
                         );
                       }
                       final _StoreLineItem item = selectedStore.items[index - 1];
+                      final String unit = item.product.unit.trim();
+                      final String quantityLabel =
+                          unit.isEmpty ? 'x${item.quantity}' : '$unit x${item.quantity}';
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Expanded(
                             child: Text(
-                              '${item.product.name} x${item.quantity}',
+                              '${item.product.name} $quantityLabel',
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),

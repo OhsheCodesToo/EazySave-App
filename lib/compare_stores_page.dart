@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
@@ -138,12 +139,29 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: results.length,
+          final _StoreComparisonResult cheapest = results.first;
+          final _StoreComparisonResult mostExpensive = results.last;
+          final double bestSaving = cheapest.saving;
+          final int totalItemCount = cheapest.items
+              .fold<int>(0, (int sum, _StoreLineItem item) => sum + item.quantity);
+
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            itemCount: results.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (BuildContext context, int index) {
-              final result = results[index];
-              final bool isCheapest = index == 0;
+              if (index == 0) {
+                return _ComparisonHeader(
+                  cheapestStoreName: cheapest.storeName,
+                  cheapestTotal: cheapest.total,
+                  mostExpensiveTotal: mostExpensive.total,
+                  saving: bestSaving,
+                  itemCount: totalItemCount,
+                );
+              }
+
+              final result = results[index - 1];
+              final bool isCheapest = (index - 1) == 0;
               return _StoreCard(
                 result: result,
                 isCheapest: isCheapest,
@@ -152,6 +170,151 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
           );
         },
       ),
+    );
+  }
+}
+
+class _ComparisonHeader extends StatelessWidget {
+  const _ComparisonHeader({
+    required this.cheapestStoreName,
+    required this.cheapestTotal,
+    required this.mostExpensiveTotal,
+    required this.saving,
+    required this.itemCount,
+  });
+
+  final String cheapestStoreName;
+  final double cheapestTotal;
+  final double mostExpensiveTotal;
+  final double saving;
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ColorScheme cs = theme.colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Best deal',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: cs.onPrimaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '$itemCount items',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              cheapestStoreName,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    'Total:',
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ),
+                if (saving > 0)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'Save ${_AnimatedMoneyText.format(saving)}',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _AnimatedMoneyText(
+                amount: cheapestTotal,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: <Widget>[
+                Text(
+                  'Most expensive:',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                _AnimatedMoneyText(
+                  amount: mostExpensiveTotal,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedMoneyText extends StatelessWidget {
+  const _AnimatedMoneyText({
+    required this.amount,
+    required this.style,
+  });
+
+  final double amount;
+  final TextStyle? style;
+
+  static String format(double amount) => 'R ${amount.toStringAsFixed(2)}';
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: amount),
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutCubic,
+      builder: (BuildContext context, double value, Widget? child) {
+        return Text(
+          format(value),
+          style: style,
+        );
+      },
     );
   }
 }
@@ -225,8 +388,10 @@ class _StoreCard extends StatelessWidget {
     buffer.writeln('Total: R $_formattedTotal');
     buffer.writeln('');
     for (final item in result.items) {
+      final String unit = item.product.unit.trim();
+      final String quantityLabel = unit.isEmpty ? 'x${item.quantity}' : '$unit x${item.quantity}';
       buffer.writeln(
-        '${item.product.name} x${item.quantity} - R ${item.lineTotal.toStringAsFixed(2)}',
+        '${item.product.name} $quantityLabel - R ${item.lineTotal.toStringAsFixed(2)}',
       );
     }
     buffer.writeln('');
@@ -322,115 +487,175 @@ class _StoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color cardColor = isCheapest
-        ? Theme.of(context).colorScheme.primaryContainer
-        : Theme.of(context).colorScheme.surface;
-
-    final Color textColor = isCheapest
-        ? Theme.of(context).colorScheme.onPrimaryContainer
-        : Theme.of(context).colorScheme.onSurface;
+    final theme = Theme.of(context);
+    final ColorScheme cs = theme.colorScheme;
+    final Color borderColor = isCheapest ? cs.primary : cs.outlineVariant;
+    final Gradient? gradient = isCheapest
+        ? LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[
+              cs.primaryContainer,
+              cs.surface,
+            ],
+          )
+        : null;
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      color: cardColor,
-      child: ExpansionTile(
-        initiallyExpanded: isCheapest,
-        leading: CircleAvatar(
-          backgroundColor: Colors.white,
-          child: Text(
-            result.storeName[0].toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+      clipBehavior: Clip.antiAlias,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: gradient,
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(20),
         ),
-        title: Text(
-          result.storeName,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Total: R $_formattedTotal',
-              style: TextStyle(color: textColor),
-            ),
-            if (result.saving > 0)
-              Text(
-                'Save R $_formattedSaving vs other store',
+        child: Theme(
+          data: theme.copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: isCheapest,
+            onExpansionChanged: (bool expanded) {
+              if (expanded) {
+                HapticFeedback.lightImpact();
+              }
+            },
+            leading: CircleAvatar(
+              backgroundColor: cs.surface,
+              child: Text(
+                result.storeName.isNotEmpty
+                    ? result.storeName[0].toUpperCase()
+                    : '?',
                 style: TextStyle(
-                  color: textColor,
-                  fontSize: 12,
-                ),
-              )
-            else
-              Text(
-                'No saving compared to the other store',
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurface,
                 ),
               ),
-          ],
-        ),
-        children: <Widget>[
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
+            ),
+            title: Row(
               children: <Widget>[
-                ...result.items.map((item) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Expanded(
+                  child: Text(
+                    result.storeName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (isCheapest)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: cs.primary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'CHEAPEST',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: cs.onPrimary,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        'Total: ',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      _AnimatedMoneyText(
+                        amount: result.total,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    result.saving > 0
+                        ? 'Save R $_formattedSaving vs most expensive'
+                        : 'No saving compared to the other store',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: Column(
+                  children: <Widget>[
+                    ...result.items.map((item) {
+                      final String unit = item.product.unit.trim();
+                      final String quantityLabel = unit.isEmpty
+                          ? 'x${item.quantity}'
+                          : '$unit x${item.quantity}';
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                '${item.product.name} $quantityLabel',
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'R ${item.lineTotal.toStringAsFixed(2)}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                    Row(
                       children: <Widget>[
                         Expanded(
-                          child: Text(
-                            '${item.product.name} x${item.quantity}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 14),
+                          child: FilledButton(
+                            onPressed: () => _onSavePressed(context),
+                            child: const Text('Save'),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'R ${item.lineTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(fontSize: 14),
+                        Expanded(
+                          child: FilledButton.tonal(
+                            onPressed: _openStoreSite,
+                            child: const Text('Open'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: FilledButton.tonal(
+                            onPressed: _shareList,
+                            child: const Text('Share'),
+                          ),
                         ),
                       ],
                     ),
-                  );
-                }),
-                const SizedBox(height: 12),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _onSavePressed(context),
-                        child: const Text('Save'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _openStoreSite,
-                        child: const Text('Open store site'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _shareList,
-                        child: const Text('Share list'),
-                      ),
-                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
