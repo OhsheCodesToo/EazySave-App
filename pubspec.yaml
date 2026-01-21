@@ -37,6 +37,7 @@ dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.3.0
   share_plus: ^10.0.0
+  google_fonts: ^6.2.1
   
   # Notifications and Supabase
   supabase_flutter: ^2.3.2
@@ -72,6 +73,7 @@ flutter:
   assets:
     - .env
     - assets/grocery_data.json
+    - assets/welcome_bg.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
