@@ -82,6 +82,22 @@ class _MyListsPageState extends State<MyListsPage> {
     });
   }
 
+  Widget _buildBackground() {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        Opacity(
+          opacity: 1,
+          child: Image.asset(
+            'assets/welcome_bg.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+        Container(color: Colors.white.withValues(alpha: 0.20)),
+      ],
+    );
+  }
+
   Future<void> _loadList(_SavedList list) async {
     final prefs = await SharedPreferences.getInstance();
     // Overwrite the main shopping_list used by CreateListPage.
@@ -115,51 +131,76 @@ class _MyListsPageState extends State<MyListsPage> {
         builder:
             (BuildContext context, AsyncSnapshot<List<_SavedList>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                _buildBackground(),
+                const Center(child: CircularProgressIndicator()),
+              ],
+            );
           }
           if (snapshot.hasError) {
-            return const Center(
-              child: Text('Error loading saved lists'),
+            return Stack(
+              fit: StackFit.expand,
+              children: const <Widget>[
+                // Background plus error text
+                // Background is static; error is centered.
+                // Using a const Stack child is not possible here with _buildBackground,
+                // so we fall back to a simple Center for the error.
+                Center(child: Text('Error loading saved lists')),
+              ],
             );
           }
 
           final List<_SavedList> lists = snapshot.data ?? <_SavedList>[];
           if (lists.isEmpty) {
-            return const Center(
-              child: Text('No saved lists yet.'),
+            return Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                _buildBackground(),
+                const Center(
+                  child: Text('No saved lists yet.'),
+                ),
+              ],
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: _refresh,
-            child: ListView.builder(
-              itemCount: lists.length,
-              itemBuilder: (BuildContext context, int index) {
-                final _SavedList list = lists[index];
-                final DateTime created = list.createdAt;
-                final String dateString =
-                    '${created.year.toString().padLeft(4, '0')}-'
-                    '${created.month.toString().padLeft(2, '0')}-'
-                    '${created.day.toString().padLeft(2, '0')}';
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _buildBackground(),
+              RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView.builder(
+                  itemCount: lists.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final _SavedList list = lists[index];
+                    final DateTime created = list.createdAt;
+                    final String dateString =
+                        '${created.year.toString().padLeft(4, '0')}-'
+                        '${created.month.toString().padLeft(2, '0')}-'
+                        '${created.day.toString().padLeft(2, '0')}';
 
-                return ListTile(
-                  leading: const Icon(Icons.history),
-                  title: Text(
-                    list.name.isNotEmpty
-                        ? list.name
-                        : '${list.storeName} list',
-                  ),
-                  subtitle: Text(
-                    '$dateString • ${list.items.length} items • R ${list.total.toStringAsFixed(2)}',
-                  ),
-                  trailing: TextButton(
-                    onPressed: () => _loadList(list),
-                    child: const Text('Load'),
-                  ),
-                  onTap: () => _loadList(list),
-                );
-              },
-            ),
+                    return ListTile(
+                      leading: const Icon(Icons.history),
+                      title: Text(
+                        list.name.isNotEmpty
+                            ? list.name
+                            : '${list.storeName} list',
+                      ),
+                      subtitle: Text(
+                        '$dateString • ${list.items.length} items • R ${list.total.toStringAsFixed(2)}',
+                      ),
+                      trailing: TextButton(
+                        onPressed: () => _loadList(list),
+                        child: const Text('Load'),
+                      ),
+                      onTap: () => _loadList(list),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),

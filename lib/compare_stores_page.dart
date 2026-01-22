@@ -27,6 +27,22 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
     _comparisonFuture = _buildComparison();
   }
 
+  Widget _buildBackground() {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        Opacity(
+          opacity: 1,
+          child: Image.asset(
+            'assets/welcome_bg.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+        Container(color: Colors.white.withValues(alpha: 0.20)),
+      ],
+    );
+  }
+
   Future<List<_StoreComparisonResult>> _buildComparison() async {
     final data = await GroceryDataLoader.load();
     final prefs = await SharedPreferences.getInstance();
@@ -124,18 +140,36 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
         builder: (BuildContext context,
             AsyncSnapshot<List<_StoreComparisonResult>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                _buildBackground(),
+                const Center(child: CircularProgressIndicator()),
+              ],
+            );
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Text('Error loading comparison: ${snapshot.error}'),
+            return Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                _buildBackground(),
+                Center(
+                  child: Text('Error loading comparison: ${snapshot.error}'),
+                ),
+              ],
             );
           }
 
           final results = snapshot.data ?? <_StoreComparisonResult>[];
           if (results.isEmpty) {
-            return const Center(
-              child: Text('No items in your list to compare.'),
+            return Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                _buildBackground(),
+                const Center(
+                  child: Text('No items in your list to compare.'),
+                ),
+              ],
             );
           }
 
@@ -145,7 +179,7 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
           final int totalItemCount = cheapest.items
               .fold<int>(0, (int sum, _StoreLineItem item) => sum + item.quantity);
 
-          return ListView.separated(
+          final Widget listView = ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             itemCount: results.length + 1,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -167,6 +201,14 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
                 isCheapest: isCheapest,
               );
             },
+          );
+
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _buildBackground(),
+              listView,
+            ],
           );
         },
       ),
@@ -210,7 +252,7 @@ class _ComparisonHeader extends StatelessWidget {
                   child: Text(
                     'Best deal',
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: cs.onPrimaryContainer,
+                      color: cs.primary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

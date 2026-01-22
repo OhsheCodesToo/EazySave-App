@@ -81,10 +81,20 @@ class _MessagesPageState extends State<MessagesPage> {
     super.dispose();
   }
 
-  Future<void> _saveMessages() async {
-    // This method is called when undoing a delete action
-    // No need to save to backend as the delete was already handled
-    // The UI will update through the stream subscription
+  Widget _buildBackground() {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        Opacity(
+          opacity: 1,
+          child: Image.asset(
+            'assets/welcome_bg.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+        Container(color: Colors.white.withValues(alpha: 0.20)),
+      ],
+    );
   }
 
   Future<void> _loadMessages() async {
@@ -201,6 +211,104 @@ class _MessagesPageState extends State<MessagesPage> {
 
   @override
   Widget build(BuildContext context) {
+    Widget content;
+    if (_isLoading) {
+      content = const Center(child: CircularProgressIndicator());
+    } else if (_messages.isEmpty) {
+      content = Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_off_outlined,
+              size: 64,
+              color: Theme.of(context).disabledColor,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No special offers yet',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Check back later for the latest deals and offers',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      );
+    } else {
+      content = ListView.builder(
+        itemCount: _messages.length,
+        itemBuilder: (context, index) {
+          final message = _messages[index];
+          return Dismissible(
+            key: Key(message.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: Colors.red,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20.0),
+              child: const Icon(
+                Icons.delete,
+                color: Colors.white,
+              ),
+            ),
+            onDismissed: (direction) {
+              _deleteMessage(message.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('"${message.title}" deleted'),
+                ),
+              );
+            },
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: message.isRead
+                    ? Theme.of(context).colorScheme.surface
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                child: Icon(
+                  message.isRead ? Icons.notifications_none : Icons.notifications_active,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              title: Text(
+                message.title,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: message.isRead ? FontWeight.normal : FontWeight.bold,
+                    ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (message.storeName != null && message.storeName!.isNotEmpty)
+                    Text(
+                      message.storeName!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                    ),
+                  Text(
+                    message.body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    timeago.format(message.timestamp),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                        ),
+                  ),
+                ],
+              ),
+              onTap: () => _markAsRead(message),
+            ),
+          );
+        },
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Special Offers'),
@@ -213,103 +321,13 @@ class _MessagesPageState extends State<MessagesPage> {
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _messages.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.notifications_off_outlined,
-                        size: 64,
-                        color: Theme.of(context).disabledColor,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No special offers yet',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Check back later for the latest deals and offers',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final message = _messages[index];
-                    return Dismissible(
-                      key: Key(message.id),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20.0),
-                        child: const Icon(
-                          Icons.delete,
-                          color: Colors.white,
-                        ),
-                      ),
-                      onDismissed: (direction) {
-                        _deleteMessage(message.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Deleted: ${message.title}'),
-                            action: SnackBarAction(
-                              label: 'Undo',
-                              onPressed: () {
-                                setState(() {
-                                  _messages.insert(index, message);
-                                });
-                                _saveMessages();
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: message.isRead
-                              ? Colors.grey[300]
-                              : Theme.of(context).primaryColor,
-                          child: Icon(
-                            Icons.local_offer,
-                            color: message.isRead ? Colors.grey[600] : Colors.white,
-                          ),
-                        ),
-                        title: Text(
-                          message.title,
-                          style: TextStyle(
-                            fontWeight: message.isRead
-                                ? FontWeight.normal
-                                : FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(message.body),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${message.storeName != null ? '${message.storeName} • ' : ''}${timeago.format(message.timestamp, locale: 'en_short')}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          if (!message.isRead) {
-                            _markAsRead(message);
-                          }
-                          // Handle message tap (e.g., navigate to offer details)
-                        },
-                      ),
-                    );
-                  },
-                ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          _buildBackground(),
+          content,
+        ],
+      ),
     );
   }
 }

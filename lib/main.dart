@@ -6,6 +6,8 @@ import 'nav_bar.dart';
 import 'services/notification_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+const Color kAccentColor = Color(0xffFF7043);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -52,14 +54,31 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _completeWelcome() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('first_time', false);
-    await prefs.setBool('has_completed_initial_list', false);
-    setState(() {
+  void _completeWelcome(BuildContext context) {
+    final bool firstTime = _firstTime ?? true;
+
+    if (!mounted) {
+      return;
+    }
+
+    if (firstTime) {
+      // Mark as not first time for future launches.
       _firstTime = false;
-      _hasCompletedInitialList = false;
-    });
+      SharedPreferences.getInstance().then((SharedPreferences prefs) {
+        prefs.setBool('first_time', false);
+      });
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) => const NavBar(initialIndex: 1),
+        ),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) => const NavBar(),
+        ),
+      );
+    }
   }
 
   @override
@@ -67,7 +86,7 @@ class _MyAppState extends State<MyApp> {
     final ThemeData theme = ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.deepOrange,
+        seedColor: kAccentColor,
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: const Color(0xFFF7F7F8),
@@ -75,6 +94,25 @@ class _MyAppState extends State<MyApp> {
         centerTitle: true,
         elevation: 0,
         scrolledUnderElevation: 0,
+        backgroundColor: kAccentColor,
+        foregroundColor: Colors.white,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: kAccentColor,
+        indicatorColor: Colors.white,
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((Set<WidgetState> states) {
+          final bool selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? Colors.white : Colors.white70,
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((Set<WidgetState> states) {
+          final bool selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            color: selected ? Colors.white : Colors.white70,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          );
+        }),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -124,20 +162,9 @@ class _MyAppState extends State<MyApp> {
       );
     }
 
-    final Widget home;
-    if (_firstTime == true) {
-      home = WelcomeScreen(
-        isFirstTime: true,
-        onContinue: _completeWelcome,
-      );
-    } else if (_hasCompletedInitialList == false) {
-      // User has completed welcome but not their first full list yet:
-      // start them on the Create List tab.
-      home = const NavBar(initialIndex: 1);
-    } else {
-      // Normal flow: start on Home tab.
-      home = const NavBar();
-    }
+    final Widget home = WelcomeScreen(
+      onContinue: _completeWelcome,
+    );
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

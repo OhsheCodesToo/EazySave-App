@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  final VoidCallback onContinue;
-  final bool isFirstTime;
-  const WelcomeScreen({super.key, required this.onContinue, required this.isFirstTime});
+  final void Function(BuildContext) onContinue;
+  //final bool isFirstTime;
+  const WelcomeScreen({super.key, required this.onContinue,/* required this.isFirstTime*/});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -28,20 +28,34 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
           Container(color: Colors.white.withValues(alpha: 0.20)),
           Center(
-            child: widget.isFirstTime
-                ? Column(
+            child: 
+                 Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         'EazySave',
                         style: GoogleFonts.rubikPuddles(
+                          
                           fontSize: 50,
                           fontWeight: FontWeight.bold,
                           color: accentColor,
                           letterSpacing: 2,
+                          shadows: const [
+                            Shadow(
+                              offset: Offset(0, 3),
+                              blurRadius: 6,
+                              color: Colors.black26,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 1),
+                      SizedBox(
+                        height: 120,
+                        width: 120,
+                        child: Image.asset('assets/cart_icon.png'),
+                      ),
+                      const SizedBox(height: 24),
                       const Text(
                         'Always on time for big savings',
                         textAlign: TextAlign.center,
@@ -54,7 +68,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                         ),
-                        onPressed: widget.onContinue,
+                        onPressed: () => widget.onContinue(context),
                         child: const Text('save now', style: TextStyle(fontSize: 20, color: Colors.white)),
                       ),
                       const SizedBox(height: 24),
@@ -71,26 +85,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             child: const Text('Privacy', style: TextStyle(fontSize: 12, color: Colors.grey)),
                           ),
                         ],
-                      ),
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'EazySave',
-                        style: GoogleFonts.rubikPuddles(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w100,
-                          color: accentColor,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'save by shopping at the right place at the right time',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 18, color: Colors.black87),
                       ),
                     ],
                   ),

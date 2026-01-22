@@ -37,6 +37,22 @@ class _CreateListPageState extends State<CreateListPage> {
     super.dispose();
   }
 
+  Widget _buildBackground() {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        Opacity(
+          opacity: 1,
+          child: Image.asset(
+            'assets/welcome_bg.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+        Container(color: Colors.white.withValues(alpha: 0.20)),
+      ],
+    );
+  }
+
   Future<void> _loadData() async {
     final data = await GroceryDataLoader.load();
     await _loadShoppingListFromPrefs(data);
@@ -140,24 +156,36 @@ class _CreateListPageState extends State<CreateListPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          _buildBackground(),
+          const Center(child: CircularProgressIndicator()),
+        ],
+      );
     }
 
-    return Column(
+    return Stack(
+      fit: StackFit.expand,
       children: <Widget>[
-        Expanded(
-          child: _buildProductList(),
-        ),
-        _buildProductSearchBar(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _onCompareStoresPressed,
-              child: const Text('Compare stores'),
+        _buildBackground(),
+        Column(
+          children: <Widget>[
+            Expanded(
+              child: _buildProductList(),
             ),
-          ),
+            _buildProductSearchBar(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _onCompareStoresPressed,
+                  child: const Text('Compare stores'),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

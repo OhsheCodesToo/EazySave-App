@@ -32,6 +32,22 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  Widget _buildBackground() {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        Opacity(
+          opacity: 1,
+          child: Image.asset(
+            'assets/welcome_bg.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+        Container(color: Colors.white.withValues(alpha: 0.20)),
+      ],
+    );
+  }
+
   Future<_HomeData> _loadHomeData() async {
     final data = await GroceryDataLoader.load();
     final prefs = await SharedPreferences.getInstance();
@@ -125,28 +141,46 @@ class _HomePageState extends State<HomePage> {
       future: _homeFuture,
       builder: (BuildContext context, AsyncSnapshot<_HomeData> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _buildBackground(),
+              const Center(child: CircularProgressIndicator()),
+            ],
+          );
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Error loading home data: ${snapshot.error}'),
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _buildBackground(),
+              Center(
+                child: Text('Error loading home data: ${snapshot.error}'),
+              ),
+            ],
           );
         }
 
         final homeData = snapshot.data;
         if (homeData == null || homeData.stores.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                const Text('No recent list available.'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: widget.onEditList,
-                  child: const Text('Create your first list'),
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _buildBackground(),
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const Text('No recent list available.'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: widget.onEditList,
+                      child: const Text('Create your first list'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         }
 
@@ -157,129 +191,123 @@ class _HomePageState extends State<HomePage> {
 
         final _StoreView selectedStore = homeData.stores[_selectedStoreIndex];
 
-        return Column(
+        return Stack(
+          fit: StackFit.expand,
           children: <Widget>[
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Last list overview',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List<Widget>.generate(homeData.stores.length, (int index) {
-                  final view = homeData.stores[index];
-                  final bool selected = index == _selectedStoreIndex;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text(view.storeName),
-                      selected: selected,
-                      onSelected: (_) {
-                        setState(() {
-                          _selectedStoreIndex = index;
-                        });
-                      },
+            _buildBackground(),
+            Column(
+              children: <Widget>[
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Last list overview',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 4),
-            if (homeData.data.lastUpdated.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Prices last updated ${homeData.data.lastUpdated}',
-                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
-              ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: selectedStore.items.length + 2,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (BuildContext context, int index) {
-                      if (index == 0) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              homeData.listName.isNotEmpty
-                                  ? homeData.listName
-                                  : 'Till slip - ${selectedStore.storeName}',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ],
-                        );
-                      }
-                      if (index == selectedStore.items.length + 1) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            const Text(
-                              'Total',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'R ${selectedStore.formattedTotal}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        );
-                      }
-                      final _StoreLineItem item = selectedStore.items[index - 1];
-                      final String unit = item.product.unit.trim();
-                      final String quantityLabel =
-                          unit.isEmpty ? 'x${item.quantity}' : '$unit x${item.quantity}';
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Expanded(
-                            child: Text(
-                              '${item.product.name} $quantityLabel',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text('R ${item.lineTotal.toStringAsFixed(2)}'),
-                        ],
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List<Widget>.generate(homeData.stores.length, (int index) {
+                      final view = homeData.stores[index];
+                      final bool selected = index == _selectedStoreIndex;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: ChoiceChip(
+                          label: Text(view.storeName),
+                          selected: selected,
+                          onSelected: (_) {
+                            setState(() {
+                              _selectedStoreIndex = index;
+                            });
+                          },
+                        ),
                       );
-                    },
+                    }),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: widget.onEditList,
-                  child: const Icon(Icons.edit),
+                const SizedBox(height: 4),
+                if (homeData.data.lastUpdated.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Prices last updated ${homeData.data.lastUpdated}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: selectedStore.items.length + 2,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (BuildContext context, int index) {
+                          if (index == 0) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  homeData.listName.isNotEmpty
+                                      ? homeData.listName
+                                      : 'Till slip - ${selectedStore.storeName}',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ],
+                            );
+                          }
+                          if (index == selectedStore.items.length + 1) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                const Text(
+                                  'Total',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  'R ${selectedStore.formattedTotal}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            );
+                          }
+                          final _StoreLineItem item = selectedStore.items[index - 1];
+                          final String unit = item.product.unit.trim();
+                          final String quantityLabel =
+                              unit.isEmpty ? 'x${item.quantity}' : '$unit x${item.quantity}';
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Expanded(
+                                child: Text(
+                                  '${item.product.name} $quantityLabel',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('R ${item.lineTotal.toStringAsFixed(2)}'),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 8),
           ],
         );
       },
