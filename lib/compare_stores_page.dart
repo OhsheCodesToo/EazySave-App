@@ -126,7 +126,7 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
       r.saving = saving > 0 ? saving : 0;
     }
 
-    return results;
+    return results; 
   }
 
   @override
@@ -154,7 +154,8 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
               children: <Widget>[
                 _buildBackground(),
                 Center(
-                  child: Text('Error loading comparison: ${snapshot.error}'),
+                  child:
+                      Text('Error loading comparison: ${snapshot.error}'),
                 ),
               ],
             );

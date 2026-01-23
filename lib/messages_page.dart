@@ -262,47 +262,69 @@ class _MessagesPageState extends State<MessagesPage> {
                 ),
               );
             },
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: message.isRead
-                    ? Theme.of(context).colorScheme.surface
-                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-                child: Icon(
-                  message.isRead ? Icons.notifications_none : Icons.notifications_active,
-                  color: Theme.of(context).colorScheme.primary,
+            child: Card(
+              color: Colors.white,
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: message.isRead
+                      ? Theme.of(context).colorScheme.surface
+                      : Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.15),
+                  child: Icon(
+                    message.isRead
+                        ? Icons.notifications_none
+                        : Icons.notifications_active,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-              ),
-              title: Text(
-                message.title,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: message.isRead ? FontWeight.normal : FontWeight.bold,
-                    ),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (message.storeName != null && message.storeName!.isNotEmpty)
+                title: Text(
+                  message.title,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: message.isRead
+                            ? FontWeight.normal
+                            : FontWeight.bold,
+                      ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (message.storeName != null &&
+                        message.storeName!.isNotEmpty)
+                      Text(
+                        message.storeName!,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
                     Text(
-                      message.storeName!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
+                      message.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      timeago.format(message.timestamp),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.color
+                                ?.withValues(alpha: 0.7),
                           ),
                     ),
-                  Text(
-                    message.body,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    timeago.format(message.timestamp),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-                        ),
-                  ),
-                ],
+                  ],
+                ),
+                onTap: () => _markAsRead(message),
               ),
-              onTap: () => _markAsRead(message),
             ),
           );
         },

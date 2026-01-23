@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'grocery_data.dart';
+import 'package:eazysave_app/main.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.onEditList});
@@ -213,7 +214,8 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List<Widget>.generate(homeData.stores.length, (int index) {
+                    children:
+                        List<Widget>.generate(homeData.stores.length, (int index) {
                       final view = homeData.stores[index];
                       final bool selected = index == _selectedStoreIndex;
                       return Padding(
@@ -264,7 +266,8 @@ class _HomePageState extends State<HomePage> {
                                   homeData.listName.isNotEmpty
                                       ? homeData.listName
                                       : 'Till slip - ${selectedStore.storeName}',
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
                                 ),
                               ],
                             );
@@ -275,21 +278,26 @@ class _HomePageState extends State<HomePage> {
                               children: <Widget>[
                                 const Text(
                                   'Total',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
                                   'R ${selectedStore.formattedTotal}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ],
                             );
                           }
-                          final _StoreLineItem item = selectedStore.items[index - 1];
+                          final _StoreLineItem item =
+                              selectedStore.items[index - 1];
                           final String unit = item.product.unit.trim();
-                          final String quantityLabel =
-                              unit.isEmpty ? 'x${item.quantity}' : '$unit x${item.quantity}';
+                          final String quantityLabel = unit.isEmpty
+                              ? 'x${item.quantity}'
+                              : '$unit x${item.quantity}';
                           return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Expanded(
                                 child: Text(
@@ -303,6 +311,26 @@ class _HomePageState extends State<HomePage> {
                           );
                         },
                       ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kAccentColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      onPressed: widget.onEditList,
+                      child: const Text('Edit list'),
                     ),
                   ),
                 ),

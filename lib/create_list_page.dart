@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:eazysave_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -176,10 +177,21 @@ class _CreateListPageState extends State<CreateListPage> {
             ),
             _buildProductSearchBar(),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kAccentColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    elevation: 2,
+                  ),
                   onPressed: _onCompareStoresPressed,
                   child: const Text('Compare stores'),
                 ),
@@ -241,8 +253,15 @@ class _CreateListPageState extends State<CreateListPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
+                    boxShadow: <BoxShadow>[
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -313,28 +332,37 @@ class _CreateListPageState extends State<CreateListPage> {
         final String quantityLabel = quantity.toString();
         final cheapest = product.cheapestPrice;
 
-        return ListTile(
-          title: Text(product.name),
-          subtitle: cheapest != null
-              ? Text('From ${cheapest.toStringAsFixed(2)} per ${product.unit}')
-              : Text(product.unit),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline),
-                onPressed: quantity > 0 ? () => _removeProduct(product) : null,
-              ),
-              Text(quantityLabel),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                onPressed: () => _addProduct(product),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => _deleteProduct(product),
-              ),
-            ],
+        return Card(
+          color: Colors.white,
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: ListTile(
+            dense: true,
+            visualDensity: const VisualDensity(vertical: -2),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+            title: Text(product.name),
+            subtitle: cheapest != null
+                ? Text('From ${cheapest.toStringAsFixed(2)} per ${product.unit}')
+                : Text(product.unit),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed:
+                      quantity > 0 ? () => _removeProduct(product) : null,
+                ),
+                Text(quantityLabel),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: () => _addProduct(product),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _deleteProduct(product),
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -103,13 +103,13 @@ class _MyAppState extends State<MyApp> {
         iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((Set<WidgetState> states) {
           final bool selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? Colors.white : Colors.white70,
+            color: selected ? kAccentColor : Colors.white70,
           );
         }),
         labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((Set<WidgetState> states) {
           final bool selected = states.contains(WidgetState.selected);
           return TextStyle(
-            color: selected ? Colors.white : Colors.white70,
+            color: selected ? kAccentColor : Colors.white70,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
           );
         }),

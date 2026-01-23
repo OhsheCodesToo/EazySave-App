@@ -142,12 +142,12 @@ class _MyListsPageState extends State<MyListsPage> {
           if (snapshot.hasError) {
             return Stack(
               fit: StackFit.expand,
-              children: const <Widget>[
+              children: <Widget>[
                 // Background plus error text
                 // Background is static; error is centered.
                 // Using a const Stack child is not possible here with _buildBackground,
                 // so we fall back to a simple Center for the error.
-                Center(child: Text('Error loading saved lists')),
+                const Center(child: Text('Error loading saved lists')),
               ],
             );
           }
@@ -181,21 +181,26 @@ class _MyListsPageState extends State<MyListsPage> {
                         '${created.month.toString().padLeft(2, '0')}-'
                         '${created.day.toString().padLeft(2, '0')}';
 
-                    return ListTile(
-                      leading: const Icon(Icons.history),
-                      title: Text(
-                        list.name.isNotEmpty
-                            ? list.name
-                            : '${list.storeName} list',
+                    return Card(
+                      color: Colors.white,
+                      margin:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: ListTile(
+                        leading: const Icon(Icons.history),
+                        title: Text(
+                          list.name.isNotEmpty
+                              ? list.name
+                              : '${list.storeName} list',
+                        ),
+                        subtitle: Text(
+                          '$dateString • ${list.items.length} items • R ${list.total.toStringAsFixed(2)}',
+                        ),
+                        trailing: TextButton(
+                          onPressed: () => _loadList(list),
+                          child: const Text('Load'),
+                        ),
+                        onTap: () => _loadList(list),
                       ),
-                      subtitle: Text(
-                        '$dateString • ${list.items.length} items • R ${list.total.toStringAsFixed(2)}',
-                      ),
-                      trailing: TextButton(
-                        onPressed: () => _loadList(list),
-                        child: const Text('Load'),
-                      ),
-                      onTap: () => _loadList(list),
                     );
                   },
                 ),
