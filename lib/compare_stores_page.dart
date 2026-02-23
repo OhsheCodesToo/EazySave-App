@@ -1,13 +1,15 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart';
 
 import 'grocery_data.dart';
 import 'nav_bar.dart';
+import 'province_dropdown.dart';
 
 class CompareStoresPage extends StatefulWidget {
   const CompareStoresPage({super.key});
@@ -25,22 +27,6 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
   void initState() {
     super.initState();
     _comparisonFuture = _buildComparison();
-  }
-
-  Widget _buildBackground() {
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        Opacity(
-          opacity: 1,
-          child: Image.asset(
-            'assets/welcome_bg.png',
-            fit: BoxFit.cover,
-          ),
-        ),
-        Container(color: Colors.white.withValues(alpha: 0.20)),
-      ],
-    );
   }
 
   Future<List<_StoreComparisonResult>> _buildComparison() async {
@@ -131,87 +117,140 @@ class _CompareStoresPageState extends State<CompareStoresPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color pageBackground = Color(0xFFF5F5F5);
+    const Color primaryTeal = Color(0xFF315762);
     return Scaffold(
+      backgroundColor: pageBackground,
       appBar: AppBar(
-        title: const Text('Compare Stores'),
+        backgroundColor: pageBackground,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: primaryTeal,
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: primaryTeal.withValues(alpha: 0.65),
+                  width: 1.5,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+              child: SizedBox(
+                height: 34,
+                child: Center(
+                  child: ProvinceDropdown(
+                    foregroundColor: primaryTeal,
+                    dropdownColor: pageBackground,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.home_outlined),
+              onPressed: () {
+                Navigator.of(context)
+                    .popUntil((Route<dynamic> route) => route.isFirst);
+              },
+            ),
+          ),
+        ),
+        title: Text(
+          'Compare Stores',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
-      body: FutureBuilder<List<_StoreComparisonResult>>(
-        future: _comparisonFuture,
-        builder: (BuildContext context,
-            AsyncSnapshot<List<_StoreComparisonResult>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                _buildBackground(),
-                const Center(child: CircularProgressIndicator()),
-              ],
-            );
-          }
-          if (snapshot.hasError) {
-            return Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                _buildBackground(),
-                Center(
-                  child:
-                      Text('Error loading comparison: ${snapshot.error}'),
-                ),
-              ],
-            );
-          }
-
-          final results = snapshot.data ?? <_StoreComparisonResult>[];
-          if (results.isEmpty) {
-            return Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                _buildBackground(),
-                const Center(
-                  child: Text('No items in your list to compare.'),
-                ),
-              ],
-            );
-          }
-
-          final _StoreComparisonResult cheapest = results.first;
-          final _StoreComparisonResult mostExpensive = results.last;
-          final double bestSaving = cheapest.saving;
-          final int totalItemCount = cheapest.items
-              .fold<int>(0, (int sum, _StoreLineItem item) => sum + item.quantity);
-
-          final Widget listView = ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            itemCount: results.length + 1,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (BuildContext context, int index) {
-              if (index == 0) {
-                return _ComparisonHeader(
-                  cheapestStoreName: cheapest.storeName,
-                  cheapestTotal: cheapest.total,
-                  mostExpensiveTotal: mostExpensive.total,
-                  saving: bestSaving,
-                  itemCount: totalItemCount,
+      body: Container(
+        decoration: BoxDecoration(
+          color: pageBackground,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(24),
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: FutureBuilder<List<_StoreComparisonResult>>(
+            future: _comparisonFuture,
+            builder: (BuildContext context,
+                AsyncSnapshot<List<_StoreComparisonResult>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('Error loading comparison: ${snapshot.error}'),
                 );
               }
 
-              final result = results[index - 1];
-              final bool isCheapest = (index - 1) == 0;
-              return _StoreCard(
-                result: result,
-                isCheapest: isCheapest,
+              final results = snapshot.data ?? <_StoreComparisonResult>[];
+              if (results.isEmpty) {
+                return const Center(
+                  child: Text('No items in your list to compare.'),
+                );
+              }
+
+              final _StoreComparisonResult cheapest = results.first;
+              final _StoreComparisonResult mostExpensive = results.last;
+              final double bestSaving = cheapest.saving;
+              final int totalItemCount = cheapest.items.fold<int>(
+                0,
+                (int sum, _StoreLineItem item) => sum + item.quantity,
+              );
+
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                itemCount: results.length + 1,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (BuildContext context, int index) {
+                  if (index == 0) {
+                    return _ComparisonHeader(
+                      cheapestStoreName: cheapest.storeName,
+                      cheapestTotal: cheapest.total,
+                      mostExpensiveTotal: mostExpensive.total,
+                      saving: bestSaving,
+                      itemCount: totalItemCount,
+                    );
+                  }
+
+                  final result = results[index - 1];
+                  final bool isCheapest = (index - 1) == 0;
+                  return _StoreCard(
+                    result: result,
+                    isCheapest: isCheapest,
+                  );
+                },
               );
             },
-          );
-
-          return Stack(
-            fit: StackFit.expand,
-            children: <Widget>[
-              _buildBackground(),
-              listView,
-            ],
-          );
-        },
+          ),
+        ),
       ),
     );
   }
@@ -236,97 +275,136 @@ class _ComparisonHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ColorScheme cs = theme.colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.16),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    'Best deal',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '$itemCount items',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              cheapestStoreName,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(color: Colors.transparent),
               ),
             ),
-            const SizedBox(height: 6),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    'Total:',
-                    style: theme.textTheme.bodyLarge,
+            Positioned.fill(
+              child: Container(
+                color: cs.surfaceContainerHighest.withValues(alpha: 0.55),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF315762),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          'Best deal',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '$itemCount items',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                if (saving > 0)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: cs.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(999),
+                  const SizedBox(height: 12),
+                  Text(
+                    cheapestStoreName,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
-                    child: Text(
-                      'Save ${_AnimatedMoneyText.format(saving)}',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'Total:',
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ),
+                      if (saving > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.surface,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'Save ${_AnimatedMoneyText.format(saving)}',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _AnimatedMoneyText(
+                      amount: cheapestTotal,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-              ],
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: _AnimatedMoneyText(
-                amount: cheapestTotal,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        'Most expensive:',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      _AnimatedMoneyText(
+                        amount: mostExpensiveTotal,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: <Widget>[
-                Text(
-                  'Most expensive:',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                _AnimatedMoneyText(
-                  amount: mostExpensiveTotal,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -532,26 +610,29 @@ class _StoreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ColorScheme cs = theme.colorScheme;
-    final Color borderColor = isCheapest ? cs.primary : cs.outlineVariant;
-    final Gradient? gradient = isCheapest
-        ? LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[
-              cs.primaryContainer,
-              cs.surface,
-            ],
-          )
-        : null;
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: gradient,
-          border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(20),
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF315762),
+          width: 1.5,
         ),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.16),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
         child: Theme(
           data: theme.copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
@@ -588,13 +669,13 @@ class _StoreCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: cs.primary,
+                      color: const Color(0xFF315762),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       'CHEAPEST',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: cs.onPrimary,
+                        color: Colors.white,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.6,
                       ),

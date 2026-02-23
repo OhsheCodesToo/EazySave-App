@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'grocery_data.dart';
-import 'package:eazysave_app/main.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.onEditList});
@@ -56,6 +55,9 @@ class _HomePageState extends State<HomePage> {
     final String listName = prefs.getString('current_list_name') ?? '';
 
     final Map<String, int> quantities = <String, int>{};
+    bool hasChanges = false;
+    final Set<String> validProductIds =
+        data.products.map((p) => p.id).where((id) => id.isNotEmpty).toSet();
 
     if (raw != null && raw.isNotEmpty) {
       final Map<String, dynamic> decoded =
@@ -64,16 +66,29 @@ class _HomePageState extends State<HomePage> {
         final int? quantity = quantityValue is int
             ? quantityValue
             : int.tryParse(quantityValue.toString());
-        if (quantity != null && quantity > 0) {
-          quantities[productId] = quantity;
+        if (quantity == null || quantity <= 0) {
+          hasChanges = true;
+          return;
         }
+        if (!validProductIds.contains(productId)) {
+          hasChanges = true;
+          return;
+        }
+        quantities[productId] = quantity;
       });
-    } else {
+    }
+
+    if (quantities.isEmpty) {
+      hasChanges = true;
       for (final product in data.products) {
         if (product.essential) {
           quantities[product.id] = 1;
         }
       }
+    }
+
+    if (hasChanges) {
+      await prefs.setString(_prefsKey, jsonEncode(quantities));
     }
 
     final List<_StoreView> stores = <_StoreView>[];
@@ -138,6 +153,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color primaryTeal = Color(0xFF315762);
     return FutureBuilder<_HomeData>(
       future: _homeFuture,
       builder: (BuildContext context, AsyncSnapshot<_HomeData> snapshot) {
@@ -214,8 +230,7 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children:
-                        List<Widget>.generate(homeData.stores.length, (int index) {
+                    children: List<Widget>.generate(homeData.stores.length, (int index) {
                       final view = homeData.stores[index];
                       final bool selected = index == _selectedStoreIndex;
                       return Padding(
@@ -249,88 +264,110 @@ class _HomePageState extends State<HomePage> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: <Color>[
+                            primaryTeal,
+                            Color(0xFF212F45),
+                          ],
+                        ),
                       ),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: selectedStore.items.length + 2,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (BuildContext context, int index) {
-                          if (index == 0) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  homeData.listName.isNotEmpty
-                                      ? homeData.listName
-                                      : 'Till slip - ${selectedStore.storeName}',
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
-                                ),
-                              ],
-                            );
-                          }
-                          if (index == selectedStore.items.length + 1) {
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: selectedStore.items.length + 2,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (BuildContext context, int index) {
+                            if (index == 0) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    homeData.listName.isNotEmpty
+                                        ? homeData.listName
+                                        : 'Till slip - ${selectedStore.storeName}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                  ),
+                                ],
+                              );
+                            }
+                            if (index == selectedStore.items.length + 1) {
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text(
+                                    'Total',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                  ),
+                                  Text(
+                                    'R ${selectedStore.formattedTotal}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                  ),
+                                ],
+                              );
+                            }
+
+                            final _StoreLineItem item =
+                                selectedStore.items[index - 1];
+                            final String unit = item.product.unit.trim();
+                            final String quantityLabel = unit.isEmpty
+                                ? 'x${item.quantity}'
+                                : '$unit x${item.quantity}';
                             return Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
-                                const Text(
-                                  'Total',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold),
+                                Expanded(
+                                  child: Text(
+                                    '${item.product.name} $quantityLabel',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'R ${selectedStore.formattedTotal}',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                                  'R ${item.lineTotal.toStringAsFixed(2)}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                 ),
                               ],
                             );
-                          }
-                          final _StoreLineItem item =
-                              selectedStore.items[index - 1];
-                          final String unit = item.product.unit.trim();
-                          final String quantityLabel = unit.isEmpty
-                              ? 'x${item.quantity}'
-                              : '$unit x${item.quantity}';
-                          return Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Expanded(
-                                child: Text(
-                                  '${item.product.name} $quantityLabel',
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text('R ${item.lineTotal.toStringAsFixed(2)}'),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kAccentColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          },
                         ),
                       ),
-                      onPressed: widget.onEditList,
-                      child: const Text('Edit list'),
                     ),
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'dart:async';
+import 'province_dropdown.dart';
 
 class Message {
   final String id;
@@ -56,7 +57,9 @@ class Message {
 }
 
 class MessagesPage extends StatefulWidget {
-  const MessagesPage({super.key});
+  const MessagesPage({super.key, this.showBackground = false});
+
+  final bool showBackground;
 
   @override
   State<MessagesPage> createState() => _MessagesPageState();
@@ -189,28 +192,11 @@ class _MessagesPageState extends State<MessagesPage> {
       _loadMessages();
     }
   }
-  
-  Future<void> _markAllAsRead() async {
-    try {
-      final unreadMessages = _messages.where((m) => !m.isRead).toList();
-      
-      if (unreadMessages.isNotEmpty) {
-        await _supabase
-            .from(_tableName)
-            .update({'is_read': true})
-            .inFilter('id', unreadMessages.map((m) => m.id).toList());
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to mark all as read')),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    const Color pageBackground = Color(0xFFF5F5F5);
+    const Color primaryTeal = Color(0xFF315762);
     Widget content;
     if (_isLoading) {
       content = const Center(child: CircularProgressIndicator());
@@ -332,23 +318,48 @@ class _MessagesPageState extends State<MessagesPage> {
     }
 
     return Scaffold(
+      backgroundColor: pageBackground,
       appBar: AppBar(
-        title: const Text('Special Offers'),
-        actions: [
-          if (_messages.any((msg) => !msg.isRead))
-            IconButton(
-              icon: const Icon(Icons.mark_email_read),
-              onPressed: _markAllAsRead,
-              tooltip: 'Mark all as read',
+        backgroundColor: pageBackground,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: primaryTeal,
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: ProvinceDropdown(
+              foregroundColor: primaryTeal,
+              dropdownColor: pageBackground,
             ),
+          ),
         ],
+        leading: IconButton(
+          icon: const Icon(Icons.home_outlined),
+          onPressed: () {
+            Navigator.of(context)
+                .popUntil((Route<dynamic> route) => route.isFirst);
+          },
+        ),
+        title: const Text('Deals'),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          _buildBackground(),
-          content,
-        ],
+      body: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(24),
+          ),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            if (widget.showBackground) _buildBackground(),
+            SafeArea(
+              top: false,
+              child: content,
+            ),
+          ],
+        ),
       ),
     );
   }

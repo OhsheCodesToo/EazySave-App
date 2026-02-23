@@ -7,6 +7,8 @@ import 'services/notification_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 const Color kAccentColor = Color(0xffFF7043);
+// Light orange background used for primary app screens (Home, etc.).
+const Color kBackgroundCream = Color(0xFFFFF3E0);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,19 +85,32 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme baseColorScheme = ColorScheme.fromSeed(
+      seedColor: kAccentColor,
+      brightness: Brightness.light,
+    );
+
+    final ColorScheme colorScheme = baseColorScheme.copyWith(
+      surface: Colors.white,
+      surfaceContainerHighest: Colors.white,
+      primaryContainer: const Color(0xFFFFE0CC),
+      onPrimaryContainer: const Color(0xFF4A1F0F),
+      secondary: kAccentColor,
+      tertiary: kAccentColor,
+    );
+
     final ThemeData theme = ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: kAccentColor,
-        brightness: Brightness.light,
-      ),
-      scaffoldBackgroundColor: const Color(0xFFF7F7F8),
-      appBarTheme: const AppBarTheme(
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: kBackgroundCream,
+      appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: kAccentColor,
-        foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF315762),
+        shadowColor: Colors.transparent,
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: kAccentColor,
@@ -103,13 +118,13 @@ class _MyAppState extends State<MyApp> {
         iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((Set<WidgetState> states) {
           final bool selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? kAccentColor : Colors.white70,
+            color: selected ? Colors.white : Colors.white70,
           );
         }),
         labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((Set<WidgetState> states) {
           final bool selected = states.contains(WidgetState.selected);
           return TextStyle(
-            color: selected ? kAccentColor : Colors.white70,
+            color: selected ? Colors.white : Colors.white70,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
           );
         }),

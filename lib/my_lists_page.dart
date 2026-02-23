@@ -122,93 +122,88 @@ class _MyListsPageState extends State<MyListsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My lists'),
-      ),
-      body: FutureBuilder<List<_SavedList>>(
-        future: _savedListsFuture,
-        builder:
-            (BuildContext context, AsyncSnapshot<List<_SavedList>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                _buildBackground(),
-                const Center(child: CircularProgressIndicator()),
-              ],
-            );
-          }
-          if (snapshot.hasError) {
-            return Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                // Background plus error text
-                // Background is static; error is centered.
-                // Using a const Stack child is not possible here with _buildBackground,
-                // so we fall back to a simple Center for the error.
-                const Center(child: Text('Error loading saved lists')),
-              ],
-            );
-          }
-
-          final List<_SavedList> lists = snapshot.data ?? <_SavedList>[];
-          if (lists.isEmpty) {
-            return Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                _buildBackground(),
-                const Center(
-                  child: Text('No saved lists yet.'),
-                ),
-              ],
-            );
-          }
-
+    return FutureBuilder<List<_SavedList>>(
+      future: _savedListsFuture,
+      builder:
+          (BuildContext context, AsyncSnapshot<List<_SavedList>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Stack(
             fit: StackFit.expand,
             children: <Widget>[
               _buildBackground(),
-              RefreshIndicator(
-                onRefresh: _refresh,
-                child: ListView.builder(
-                  itemCount: lists.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final _SavedList list = lists[index];
-                    final DateTime created = list.createdAt;
-                    final String dateString =
-                        '${created.year.toString().padLeft(4, '0')}-'
-                        '${created.month.toString().padLeft(2, '0')}-'
-                        '${created.day.toString().padLeft(2, '0')}';
+              const Center(child: CircularProgressIndicator()),
+            ],
+          );
+        }
+        if (snapshot.hasError) {
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              // Background plus error text
+              // Background is static; error is centered.
+              // Using a const Stack child is not possible here with _buildBackground,
+              // so we fall back to a simple Center for the error.
+              const Center(child: Text('Error loading saved lists')),
+            ],
+          );
+        }
 
-                    return Card(
-                      color: Colors.white,
-                      margin:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: ListTile(
-                        leading: const Icon(Icons.history),
-                        title: Text(
-                          list.name.isNotEmpty
-                              ? list.name
-                              : '${list.storeName} list',
-                        ),
-                        subtitle: Text(
-                          '$dateString • ${list.items.length} items • R ${list.total.toStringAsFixed(2)}',
-                        ),
-                        trailing: TextButton(
-                          onPressed: () => _loadList(list),
-                          child: const Text('Load'),
-                        ),
-                        onTap: () => _loadList(list),
-                      ),
-                    );
-                  },
-                ),
+        final List<_SavedList> lists = snapshot.data ?? <_SavedList>[];
+        if (lists.isEmpty) {
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _buildBackground(),
+              const Center(
+                child: Text('No saved lists yet.'),
               ),
             ],
           );
-        },
-      ),
+        }
+
+        return Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            _buildBackground(),
+            RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView.builder(
+                itemCount: lists.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final _SavedList list = lists[index];
+                  final DateTime created = list.createdAt;
+                  final String dateString =
+                      '${created.year.toString().padLeft(4, '0')}-'
+                      '${created.month.toString().padLeft(2, '0')}-'
+                      '${created.day.toString().padLeft(2, '0')}';
+
+                  return Card(
+                    color: Colors.white,
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: ListTile(
+                      leading: const Icon(Icons.history),
+                      title: Text(
+                        list.name.isNotEmpty
+                            ? list.name
+                            : '${list.storeName} list',
+                      ),
+                      subtitle: Text(
+                        '$dateString • ${list.items.length} items • R ${list.total.toStringAsFixed(2)}',
+                      ),
+                      trailing: TextButton(
+                        onPressed: () => _loadList(list),
+                        child: const Text('Load'),
+                      ),
+                      onTap: () => _loadList(list),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

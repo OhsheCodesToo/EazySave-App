@@ -1,20 +1,25 @@
 import 'dart:convert';
 
-import 'package:eazysave_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'compare_stores_page.dart';
 import 'grocery_data.dart';
+import 'scroll_route.dart';
+import 'province_dropdown.dart';
 
 class CreateListPage extends StatefulWidget {
-  const CreateListPage({super.key});
+  const CreateListPage({super.key, this.showBackground = false});
+
+  final bool showBackground;
 
   @override
   State<CreateListPage> createState() => _CreateListPageState();
 }
 
 class _CreateListPageState extends State<CreateListPage> {
+  static const Color _primaryTeal = Color(0xFF315762);
+
   bool _isLoading = true;
 
   final List<GroceryProduct> _allProducts = <GroceryProduct>[];
@@ -83,11 +88,13 @@ class _CreateListPageState extends State<CreateListPage> {
     }
 
     final Map<String, dynamic> decoded = jsonDecode(raw) as Map<String, dynamic>;
+    bool hasChanges = false;
     decoded.forEach((productId, quantityValue) {
       final int? quantity = quantityValue is int
           ? quantityValue
           : int.tryParse(quantityValue.toString());
       if (quantity == null || quantity <= 0) {
+        hasChanges = true;
         return;
       }
       final product = _findProductById(data, productId);
@@ -96,8 +103,26 @@ class _CreateListPageState extends State<CreateListPage> {
           product: product,
           quantity: quantity,
         );
+      } else {
+        hasChanges = true;
       }
     });
+
+    if (_shoppingList.isEmpty) {
+      hasChanges = true;
+      for (final product in data.products) {
+        if (product.essential) {
+          _shoppingList[product.id] = ShoppingListItem(
+            product: product,
+            quantity: 1,
+          );
+        }
+      }
+    }
+
+    if (hasChanges) {
+      await _saveShoppingListToPrefs();
+    }
   }
 
   Future<void> _saveShoppingListToPrefs() async {
@@ -156,50 +181,192 @@ class _CreateListPageState extends State<CreateListPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color pageBackground = Color(0xFFF5F5F5);
+    const Color primaryTeal = Color(0xFF315762);
     if (_isLoading) {
-      return Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          _buildBackground(),
-          const Center(child: CircularProgressIndicator()),
-        ],
-      );
-    }
-
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        _buildBackground(),
-        Column(
-          children: <Widget>[
-            Expanded(
-              child: _buildProductList(),
-            ),
-            _buildProductSearchBar(),
+      return Scaffold(
+        backgroundColor: pageBackground,
+        appBar: AppBar(
+          backgroundColor: pageBackground,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: primaryTeal,
+          actions: <Widget>[
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccentColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    elevation: 2,
-                  ),
-                  onPressed: _onCompareStoresPressed,
-                  child: const Text('Compare stores'),
-                ),
+              padding: const EdgeInsets.only(right: 12),
+              child: ProvinceDropdown(
+                foregroundColor: primaryTeal,
+                dropdownColor: pageBackground,
               ),
             ),
           ],
+          leading: IconButton(
+            icon: const Icon(Icons.home_outlined),
+            onPressed: () {
+              Navigator.of(context)
+                  .popUntil((Route<dynamic> route) => route.isFirst);
+            },
+          ),
+          title: const Text('Create list'),
+        ),
+        body: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            if (widget.showBackground) _buildBackground(),
+            const Center(child: CircularProgressIndicator()),
+          ],
+        ),
+      );
+    }
+
+    final Widget content = Column(
+      children: <Widget>[
+        Expanded(
+          child: _buildProductList(),
+        ),
+        _buildProductSearchBar(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryTeal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                elevation: 2,
+              ),
+              onPressed: _onCompareStoresPressed,
+              child: Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  Positioned(
+                    top: 2,
+                    left: 2,
+                    child: Text(
+                      'Compare stores',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.20),
+                        fontWeight: FontWeight.w900,
+                        fontSize: (Theme.of(context).textTheme.labelLarge?.fontSize ?? 14) + 3,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 1,
+                    left: 1,
+                    child: Text(
+                      'Compare stores',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.50),
+                        fontWeight: FontWeight.w900,
+                        fontSize: (Theme.of(context).textTheme.labelLarge?.fontSize ?? 14) + 3,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'Compare stores',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: (Theme.of(context).textTheme.labelLarge?.fontSize ?? 14) + 3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ],
+    );
+
+    return Scaffold(
+      backgroundColor: pageBackground,
+      appBar: AppBar(
+        backgroundColor: pageBackground,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: primaryTeal,
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: primaryTeal.withValues(alpha: 0.65),
+                  width: 1.5,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+              child: SizedBox(
+                height: 34,
+                child: Center(
+                  child: ProvinceDropdown(
+                    foregroundColor: primaryTeal,
+                    dropdownColor: pageBackground,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.home_outlined),
+              onPressed: () {
+                Navigator.of(context)
+                    .popUntil((Route<dynamic> route) => route.isFirst);
+              },
+            ),
+          ),
+        ),
+        title: const Text('Create list'),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(24),
+          ),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            if (widget.showBackground) _buildBackground(),
+            SafeArea(
+              top: false,
+              child: content,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -233,9 +400,7 @@ class _CreateListPageState extends State<CreateListPage> {
     await _saveShoppingListToPrefs();
     if (!mounted) return;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (BuildContext context) => const CompareStoresPage(),
-      ),
+      buildScrollRoute<void>(const CompareStoresPage()),
     );
   }
 
@@ -257,19 +422,49 @@ class _CreateListPageState extends State<CreateListPage> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        color: _primaryTeal.withValues(alpha: 0.16),
+                        blurRadius: 36,
+                        offset: const Offset(0, 0),
+                      ),
+                      BoxShadow(
+                        color: _primaryTeal.withValues(alpha: 0.30),
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
+                      ),
+                      BoxShadow(
+                        color: _primaryTeal.withValues(alpha: 0.20),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _onSearchChanged,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Search products',
-                      icon: Icon(Icons.search),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      decoration: InputDecoration(
+                        hintText: 'Search products',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -286,9 +481,19 @@ class _CreateListPageState extends State<CreateListPage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+                  color: _primaryTeal.withValues(alpha: 0.16),
+                  blurRadius: 36,
+                  offset: const Offset(0, 0),
+                ),
+                BoxShadow(
+                  color: _primaryTeal.withValues(alpha: 0.30),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+                BoxShadow(
+                  color: _primaryTeal.withValues(alpha: 0.20),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -323,6 +528,7 @@ class _CreateListPageState extends State<CreateListPage> {
     }
 
     return ListView.separated(
+      padding: const EdgeInsets.all(16),
       itemCount: items.length,
       separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (BuildContext context, int index) {
@@ -332,36 +538,65 @@ class _CreateListPageState extends State<CreateListPage> {
         final String quantityLabel = quantity.toString();
         final cheapest = product.cheapestPrice;
 
-        return Card(
-          color: Colors.white,
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          child: ListTile(
-            dense: true,
-            visualDensity: const VisualDensity(vertical: -2),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-            title: Text(product.name),
-            subtitle: cheapest != null
-                ? Text('From ${cheapest.toStringAsFixed(2)} per ${product.unit}')
-                : Text(product.unit),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed:
-                      quantity > 0 ? () => _removeProduct(product) : null,
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: _primaryTeal.withValues(alpha: 0.16),
+                blurRadius: 36,
+                offset: const Offset(0, 0),
+              ),
+              BoxShadow(
+                color: _primaryTeal.withValues(alpha: 0.30),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+              BoxShadow(
+                color: _primaryTeal.withValues(alpha: 0.20),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Card(
+              color: Colors.white,
+              margin: EdgeInsets.zero,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: ListTile(
+                dense: true,
+                visualDensity: const VisualDensity(vertical: -2),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                title: Text(product.name),
+                subtitle: cheapest != null
+                    ? Text('From ${cheapest.toStringAsFixed(2)} per ${product.unit}')
+                    : Text(product.unit),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed:
+                          quantity > 0 ? () => _removeProduct(product) : null,
+                    ),
+                    Text(quantityLabel),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () => _addProduct(product),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => _deleteProduct(product),
+                    ),
+                  ],
                 ),
-                Text(quantityLabel),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () => _addProduct(product),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _deleteProduct(product),
-                ),
-              ],
+              ),
             ),
           ),
         );
